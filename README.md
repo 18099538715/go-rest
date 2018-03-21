@@ -1,3 +1,5 @@
+golang restful风格小框架，初版对参数类型、返回类型、请求方法都做了限制，目前只支持get和post方法，post方法的content-type必须为application/json
+，路径参数类型暂时只支持string和int类型。抽空写的，后续会继续完善
 ```
 package main
 
