@@ -1,4 +1,4 @@
-package main
+`package main
 
 import (
 	"encoding/json"
@@ -30,5 +30,5 @@ func main() {
 		return userId
 	})
 	http.ListenAndServe(":8000", handler)
-}`
+}
 `
