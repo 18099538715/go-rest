@@ -1,4 +1,4 @@
-package rest
+package webrestful
 
 type RequestInfo struct {
 	Method      string      //'请求的方法'

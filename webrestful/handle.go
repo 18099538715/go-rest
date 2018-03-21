@@ -1,4 +1,4 @@
-package rest
+package webrestful
 
 import (
 	"encoding/json"
