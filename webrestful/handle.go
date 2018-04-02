@@ -13,6 +13,13 @@ type Handler struct {
 }
 
 func (c Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if p := recover(); p != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("System abnormality"))
+		}
+		r.Body.Close()
+	}()
 	reqestInfo, ok, pathParams := getMapping(r.RequestURI, r.Method)
 	if ok == 404 {
 		notFound(w)
@@ -31,9 +38,6 @@ func (c Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 func handlePost(w http.ResponseWriter, r *http.Request, reqestInfo *RequestInfo, pathParams []string) {
-	defer func() {
-		r.Body.Close()
-	}()
 	fv := reflect.ValueOf(reqestInfo.HandleFunc)
 	body, _ := ioutil.ReadAll(r.Body)
 	argsLen := fv.Type().NumIn()
@@ -130,8 +134,9 @@ func handleGet(w http.ResponseWriter, r *http.Request, reqestInfo *RequestInfo, 
 			params[i] = reflect.ValueOf(v)
 		}
 	}
-	fv.Call(params)
-	r.Body.Close()
+	responses := fv.Call(params)
+	res(responses, w)
+	return
 }
 func getParam(kind reflect.Kind, param string) (reflect.Value, error) {
 	switch kind {
