@@ -36,14 +36,14 @@ func Route(requestUrl string, reqMethod string, contentType string, handleFunc i
 		v, ok := PathUrlMapping[requestUrl]
 		if ok {
 			PathUrlMapping[requestUrl] = append(v, &RequestInfo{Method: reqMethod, ContentType: contentType, HandleFunc: handleFunc, UrlSplit: s})
-		} else {
+		} else { //其实requestinfo里的url是相同的，冗余存储了
 			PathUrlMapping[requestUrl] = []*RequestInfo{&RequestInfo{Method: reqMethod, ContentType: contentType, HandleFunc: handleFunc, UrlSplit: s}}
 		}
 	} else {
 		v, ok := UrlMapping[requestUrl]
 		if ok {
 			UrlMapping[requestUrl] = append(v, &RequestInfo{Method: reqMethod, ContentType: contentType, HandleFunc: handleFunc})
-		} else {
+		} else { //其实requestinfo里的url是相同的，冗余存储了
 			UrlMapping[requestUrl] = []*RequestInfo{&RequestInfo{Method: reqMethod, ContentType: contentType, HandleFunc: handleFunc}}
 		}
 	}
