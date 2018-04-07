@@ -88,50 +88,38 @@ func handlePost(w http.ResponseWriter, r *http.Request, reqestInfo *RequestInfo,
 	res(responses, w)
 	return
 }
-func res(responses []reflect.Value, w http.ResponseWriter) {
-	for _, res := range responses {
-		if res.Kind() != reflect.Ptr {
-			b, err := json.Marshal(res.Interface())
-			if err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			w.WriteHeader(200)
-			w.Write(b)
-		} else {
-			b, err := json.Marshal(res.Elem().Interface())
-			if err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			w.WriteHeader(200)
-			w.Write(b)
-		}
 
-	}
-}
 func handleGet(w http.ResponseWriter, r *http.Request, reqestInfo *RequestInfo, pathParams []string) {
 	fv := reflect.ValueOf(reqestInfo.HandleFunc)
-	body, _ := ioutil.ReadAll(r.Body)
 	argsLen := fv.Type().NumIn()
 	params := make([]reflect.Value, argsLen)
+	var err error = nil
 	for i := 0; i < argsLen; i++ {
 		arg := fv.Type().In(i)
 		if arg.Kind() != reflect.Ptr { //如果不是指针类型
-			v := reflect.New(arg)
 			if arg.Kind() == reflect.Struct {
-				json.Unmarshal(body, v.Interface())
-				params[i] = v.Elem()
+
 			} else {
-				params[i] = reflect.ValueOf(pathParams[i])
+				params[i], err = getParam(arg.Kind(), pathParams[i])
+				if err != nil {
+					badRequest(w)
+					return
+				}
+
 			}
 
 		} else { //如果是指针类型
-			v := reflect.New(arg.Elem()).Interface()
-			json.Unmarshal(body, v)
-			params[i] = reflect.ValueOf(v)
+			if arg.Elem().Kind() == reflect.Struct {
+
+			} else {
+				param := reflect.New(arg.Elem())
+				getPtrParam(param, pathParams[i])
+				params[i] = param
+				if err != nil {
+					badRequest(w)
+					return
+				}
+			}
 		}
 	}
 	responses := fv.Call(params)
@@ -169,7 +157,7 @@ func getParam(kind reflect.Kind, param string) (reflect.Value, error) {
 		}
 	case reflect.Int64:
 		{
-			a, err := strconv.Atoi(param)
+			a, err := strconv.ParseInt(param, 10, 64)
 			if err != nil {
 				return reflect.Value{}, err
 			} else {
@@ -231,5 +219,29 @@ func getPtrParam(arg reflect.Value, param string) error {
 		return nil
 	default:
 		return errors.New("参数获取失败")
+	}
+}
+func res(responses []reflect.Value, w http.ResponseWriter) {
+	for _, res := range responses {
+		if res.Kind() != reflect.Ptr {
+			b, err := json.Marshal(res.Interface())
+			if err != nil {
+				w.WriteHeader(500)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.WriteHeader(200)
+			w.Write(b)
+		} else {
+			b, err := json.Marshal(res.Elem().Interface())
+			if err != nil {
+				w.WriteHeader(500)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.WriteHeader(200)
+			w.Write(b)
+		}
+
 	}
 }
